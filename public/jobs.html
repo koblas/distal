@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Jobs</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <link href="./public/css/bootstrap.css" rel="stylesheet">
+    <link href="./public/css/bootstrap-responsive.css" rel="stylesheet">
+    <link href="./public/css/jobs.css" rel="stylesheet">
+</head>
+
+  <body>
+  <!-- Navbar
+    ================================================== -->
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+			<div class="container">
+			<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+			<a class="brand" href="#tab01">Jobs</a>
+          <div class="nav-collapse">	
+				
+				<ul class="nav">
+					<li class="active">
+						<a href="#tab01">Home</a>
+					</li>
+					<li>
+						<a href="#tab02">Titles</a>
+					</li>
+					<li>
+						<a href="#tab03">Descriptions</a>
+					</li>
+					<li>
+						<a href="#tab04">Experimental</a>
+					</li>
+					<li>
+						<a href="#tab05">About</a>
+					</li>
+				</ul>
+			</div>
+		  </div>		
+		</div>
+	</div>
+
+    <div class="container">
+	    <div id="menuheader"></div>
+	    <div id="menudropdown"></div>
+		<div id="content" class="content"></div>
+		<footer>
+			<p><a href="http://michaelangerman.net" target="_blank">&copy; 2012 Michael I Angerman</a></p>
+		</footer>
+    </div>
+
+     <!-- Footer
+      ================================================== -->
+      <footer class="footer">
+        <center><p>Designed and built by the folks at <a href="http://zrato.com" target="_blank">ZratoMedia</a></p></center>
+      </footer>
+
+    <script src="./public/js/vendor/jquery.js"></script>
+    <script src="./public/js/vendor/json2.js"></script>
+    <script src="./public/js/vendor/underscore.js"></script>
+    <script src="./public/js/vendor/backbone.js"></script>
+    <script src="./public/js/vendor/backbone-localstorage.js"></script>
+    <script src="./public/js/vendor/backbone.marionette.js"></script>
+    <script src="./public/js/vendor/bootstrap.js"></script>
+    <script src="./public/js/vendor/showdown.js"></script>
+    <script src="./public/js/vendor/handlebars.js"></script>
+    <script src="./public/js/liveview.js"></script>
+    <script src="./public/data/dataset.js"></script>
+	<script src="./public/js/jobs.js"></script>
+
+	<script type="text/template" id="experimental-template">
+	<div class="span12">
+      <div class="mini-layout fluid">
+        <div class="mini-layout-sidebar"></div>
+        <div class="mini-layout-body">
+          <h2>{{city}}</h2>
+          <p><b><a href="{{url}}">{{title}}</a></b></p>
+        </div>
+      </div>
+    </div>
+   </script>
+	
+	<script id="tab01" type="text/html"></script>
+	<script id="tab02" type="text/html"></script>
+	<script id="tab03" type="text/html"></script>
+
+	<script id="tab04" type="text/html">
+	<div class="container-fluid">
+		<div id="alljobcontent"></div> 
+	</div>
+	</script>	
+	
+	<script id="tab05" type="text/html">
+	<div class="container-fluid">
+	<section id="layouts">
+	  <div id="experimentalcontent"></div>
+	</section>
+	</div>
+	</script>	
+
+	<script id="not-found" type="text/html">
+		<div class="page-header">
+			<h1>404</h1>
+		</div>
+		<div class="row">
+			<div class="span14">
+				<p>
+					This is not the content you are looking for.
+				</p>
+			</div>
+		</div>
+	</script>
+
+<script id="documentation-template" type="text/html">
+	<div>
+		<p>A detailed tutorial with documentation can be found <a href="https://github.com/stormabq/jobs/blob/master/doc/tutorial.md">here.</a></p>
+		<p>MIT License * Fork me on <a href="https://github.com/stormabq/jobs">Github</a></p>
+	</div>
+</script>
+
+<script id="nodata-template" type="text/html">
+	<div>
+		<p>with a focus on Javscript, Python, and Ruby Jobs</p>
+	</div>
+</script>
+
+<script id="subtext-template" type="text/html">
+	<div>
+		<p>Stay tuned for more interesting graphics in the next release with the help of 
+			<b><a href="http://d3js.org">D3</a></b>
+		</p>
+	</div>
+</script>
+
+<script id="menuheader-template" type="text/html">
+	<div>
+		<h2>{{menuheader}}</h2>
+	</div>
+</script>
+
+<script id="alljobs-template" type="text/html">
+	<div class="row">
+		<div class="span14">
+	        <b><a href="{{url}}">{{title}}</a></b>&nbsp;&nbsp;[{{city}}]
+		</div>
+	</div>
+</script>
+
+<script id="alljobs-description-template" type="text/html">
+	<div class="row">
+		<div class="span14">
+	        <b><a href="{{url}}">{{title}}</a></b>
+		</div>
+	</div>
+	<div class="row">
+		<div class="span14">
+	        <p>{{description}}</p>
+		</div>
+	</div>
+</script>
+
+<script id="pagetop-template" type="text/html">
+	<div id='megustobackbone'></div>
+</script>
+
+<script id="pagejob-template" type="text/html">
+	<div class="row">
+		<div class="span14">
+	        <b><a href="{{url}}">{{title}}</a></b>
+	        <!--
+	        &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+	        <b>[{{titletags}}, {{descriptiontags}}]</b>
+            -->
+		</div>
+	</div>
+	<div class="row">
+		<div class="span14">
+	        <p>{{description}}</p>
+		</div>
+	</div>
+</script>
+
+<script id="menudropdown-template" type="text/html">
+<header class="jumbotron subhead" id="overview">
+  <div class="subnav">
+    <ul class="nav nav-pills">
+
+      <li class="dropdown">
+        <a class="dropdown-toggle" data-toggle="dropdown" href="#">Cities <b class="caret"></b></a>
+        <ul id="menu-cities" class="dropdown-menu">
+			{{#each city}}
+				<li><a href="#city/{{this}}">{{this}}</a></li>
+			{{/each}}
+        </ul>
+      </li>
+      
+      <li class="dropdown">
+        <a class="dropdown-toggle" data-toggle="dropdown" href="#">Titles <b class="caret"></b></a>
+        <ul id="menu-titles" class="dropdown-menu">
+			{{#each title}}
+				<li><a href="#title/{{this}}">{{this}}</a></li>
+			{{/each}}
+        </ul>
+      </li>
+      
+      <li class="dropdown">
+        <a class="dropdown-toggle" data-toggle="dropdown" href="#">Descriptions <b class="caret"></b></a>
+        <ul id="menu-descriptions" class="dropdown-menu">
+			{{#each description}}
+				<li><a href="#description/{{this}}">{{this}}</a></li>
+			{{/each}}
+        </ul>
+      </li>
+
+    </ul>
+  </div>
+</header>
+</script>
+
+</body>
+</html>
