@@ -13,7 +13,7 @@ Image a template that looked like this and some JavaScript that follows.  Instea
 whole process of defining the template wiring it up doing a bunch of creation we can do 
 something as simple as focus on what we want to accomplish.
 
-```html
+```handlebars
     <script type="text/x-handlebars" id="app_template">
     {{view Todos.CreateTodoView id="new-todo" placeholder="What needs to be done?"}}
 
