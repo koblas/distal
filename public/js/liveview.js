@@ -1,4 +1,10 @@
 (function() {
+    var _id = 1000;
+    function nextId() {
+        _id += 1;
+        return "distal_" + _id;
+    }
+
     function get(obj, keyName) {
         if (keyName === undefined && 'string' === typeof obj) {
             keyName = obj;
@@ -50,6 +56,7 @@
                 this.template = this.options.template;
             if (this.options._childTemplate)
                 this._childTemplate = this.options._childTemplate;
+            this._childViews = [];
         },
 
         initialize: function() {
@@ -69,15 +76,6 @@
           // data = this.mixinTemplateHelpers(data);
 
           return data;
-        },
-
-        renderToBuffer: function(buffer, options) {
-            var buffer = buffer || [];
-
-            this.render(buffer, options || {});
-
-            // console.log(buffer);
-            return this.packBuffer(buffer);
         },
 
         makeElement: function() {
@@ -116,7 +114,7 @@
             var prevString = false;
             var result = [];
 
-            _.each(buffer, function (item) {
+            _.each(buffer || [], function (item) {
                 var isstr = (typeof item === "string");
 
                 if (!prevString || !isstr) {
@@ -132,10 +130,37 @@
 
         preRender: function() {},
 
-        render: function(buffer, options) {
-            this.preRender();
+        /*
+         * General render function that will get called by developers
+         */
+        render: function() {
+            var buffer = [],
+                options = {
+                    data: {},
+                    buffer: buffer
+                };
+            
+            this._render(buffer, options);
 
-            // console.log("RENDER Called", this);
+            var result = this.packBuffer(buffer);
+
+            if (!this.el)
+                this.$el.append(result[0]);
+            else
+                this.$el.replaceWith(result[0]);
+
+            this._bindViews();
+        },
+
+        _bindViews: function() {
+            this.setElement($('[data-distal-id=' + this._distal_id + ']'));
+            _.each(this._childViews, function(view) {
+                view._bindViews();
+            });
+        },
+
+        _render: function(buffer, options) {
+            this.preRender();
 
             if (!this._template) {
                 var template = this.template;
@@ -175,6 +200,13 @@
                 h = $(h);
             }
 
+            if (!this._distal_id)
+                this._distal_id = nextId();
+            h.attr({ 'data-distal-id' : this._distal_id });
+
+            if (options.data.view)
+                options.data.view._childViews.push(this);
+
             if (this._childTemplate) {
                 _.map(this._childTemplate, function(tmpl) {
                     var buffer = [];
@@ -182,39 +214,40 @@
                         buffer: buffer,
                         view: data.view
                     };
-                    var v = tmpl(context, { data: d2 });
+                    var v = tmpl(context, { data: d2, view:this });
 
                     _.each(this.packBuffer(buffer), function(item) {
                         h.append(item);
                     });
                 }, this);
             }
-            // console.log("HERE", this.$el, this.el, h);
 
-            // this.$el.append(h);
-            if (this.el.parentNode)
-                this.$el.replaceWith(h);
-            this.setElement(h);
-            // console.log(h);
-            return h;
+            // return (h instanceof $) ? h.html() : h;
+
+            if (h instanceof $)
+                buffer.push(h.wrap('<div></div>').parent().html());
+            else
+                buffer.push(h);
         }
     });
 
     Backbone.Distal.CollectionView = Backbone.Distal.View.extend({
         initialize: function() {
             this.super();
+
             if (this.collection) {
-                this.collection.on('change', this.on_change, this);
-                this.collection.on('remove', this.on_change, this);
+                this.collection.on('add', this.render, this);
+                this.collection.on('change', this.render, this);
+                this.collection.on('remove', this.render, this);
             }
         },
 
         on_change: function() {
             // console.log("Backbone.Distal.CollectionView change event");
-            this.render();
+            this.rerender();
         },
 
-        render: function(buffer, options) {
+        _render: function(buffer, options) {
             this.preRender();
 
             // console.log("collection render");
@@ -230,9 +263,15 @@
 
             this._template = this.makeElement;
             var h = this._template(context, {data:data});
-            if (!(h instanceof $)) {
+            if (!(h instanceof $))
                 h = $(h);
-            }
+
+            if (!this._distal_id)
+                this._distal_id = nextId();
+            h.attr({ 'data-distal-id' : this._distal_id });
+
+            if (options.data.view)
+                options.data.view._childViews.push(this);
 
             if (this._childTemplate) {
                 tmpl = this._childTemplate[0];
@@ -252,10 +291,10 @@
                 }, this);
             }
 
-            if (this.el.parentNode)
-                this.$el.replaceWith(h);
-            this.setElement(h);
-            return h;
+            if (h instanceof $)
+                buffer.push(h.wrap('<div></div>').parent().html());
+            else
+                buffer.push(h);
         }
     })
 
@@ -325,6 +364,7 @@
             var viewOptions = {
                 templateData: options.data,
                 model: data.model,
+                view: options.data.view,
                 collection: data.collection,
                 data: options.data
             };
@@ -340,7 +380,7 @@
             var view = new newView(viewOptions);
             // console.log(view);
 
-            var h = view.render(options.data.buffer, viewOptions);
+            var h = view._render(options.data.buffer, viewOptions);
             // currentView.$el.append(view.render(view, viewOptions));
             return h;
         },
@@ -471,6 +511,7 @@
 
             var currentView = thisContext.view;
             var viewOptions = {
+                view: options.data.view,
                 templateData: options.data,
                 data: options.data,
                 collection: collection
@@ -485,7 +526,7 @@
 
             var view = new newView(viewOptions);
 
-            return view.render(options.data.buffer, viewOptions);
+            return view._render(options.data.buffer, viewOptions);
         }
     };
 

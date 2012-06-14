@@ -45,7 +45,6 @@
             // This is a funny, the .each() method will abort iteration on modification
             _.each(Todos.todoList.filter(function (todo) {
                 return todo.get('isDone');
-                    todo.destroy();
             }), function (todo) { todo.destroy(); });
         }
     });
@@ -82,7 +81,6 @@
         },
 
         isDone: function() { 
-            // return this.get('isDone') ? "DONE" : "NOT"; 
             return this.model.get('isDone');
         },
 
@@ -95,30 +93,10 @@
     var AppView = Backbone.Distal.View.extend({
         templateName:  'app_template',
 
-        el: 'body',
+        el: '#app_body',
 
         events: {
             'change .mark-all-done' : 'all_done'
-        },
-
-        initialize: function() {
-            this._parentView = null;
-
-            var buffer = [];
-
-            this.$('script[type="text/x-handlebars"]').each(function() {
-                var view = new Backbone.Distal.View({
-                    template: $(this).html()
-                });
-
-                view.renderToBuffer(buffer);
-
-                $(this).remove();
-            });
-
-            _.each(buffer, function(item) {
-                this.$el.append(item);
-            }, this);
         },
 
         all_done: function(evt) {
@@ -132,4 +110,5 @@
     });
 
     var app = new AppView();
+    app.render();
 })();

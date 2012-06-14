@@ -18,21 +18,24 @@
   <script src="/public/js/vendor/underscore.js"></script>
   <script src="/public/js/vendor/backbone.js"></script>
   <script src="/public/js/vendor/handlebars.js"></script>
+  <script src="/public/js/jquery_clean.js"></script>
   <script src="/public/js/liveview.js"></script>
   <script src="/public/js/liveview_fields.js"></script>
 </head>
 <body>
   <h1>Todos</h1>
+  <div id="app_body"></div>
 
   <script type="text/x-handlebars" id="app_template">
   {{view Todos.CreateTodoView id="new-todo" placeholder="What needs to be done?"}}
 
   <!-- Insert this after the CreateTodoView and before the collection. -->
   {{#view Todos.StatsView id="stats"}}
-    <button class="sc-button">Clear Completed Todos</button>
+    <button class="ember-button">Clear Completed Todos</button>
     {{remaining}} remaining
   {{/view}}
 
+  <!-- TODO need to figure out how to embed in label -->
   <label>
     {{view Lv.Checkbox class="mark-all-done"}}
     <span class="">Mark All as Done</span>
@@ -45,7 +48,6 @@
       </div>
     {{/view}}
   {{/collection}}
-
   </script>
 
   <script src="/public/js/todo.js"></script>
