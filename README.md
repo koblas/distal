@@ -13,7 +13,7 @@ Image a template that looked like this and some JavaScript that follows.  Instea
 whole process of defining the template wiring it up doing a bunch of creation we can do 
 something as simple as focus on what we want to accomplish.
 
-From the [index.html](blob/master/public/index.html) file
+From the [index.html](distal/blob/master/public/index.html) file
 
 ```handlebars
     <script type="text/x-handlebars" id="app_template">
@@ -42,7 +42,7 @@ From the [index.html](blob/master/public/index.html) file
 
 --
 
-From the todo.js file https://github.com/koblas/distal/blob/master/public/js/todo.js
+From the [todo.js](distal/blob/master/public/js/todo.js) file
 
 ```JavaScript
     Todos.CreateTodoView = Backbone.Distal.TextField.extend({
