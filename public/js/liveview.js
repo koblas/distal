@@ -25,6 +25,17 @@
             _checkGlobal = false;
         }
 
+        if (root instanceof Backbone.Model) {
+            var val = getPath(root.attributes, path, false);
+            if (val)
+                return val;
+        }
+        if (root instanceof Backbone.View && root.model !== undefined) {
+            var val = getPath(root.model.attributes, path, false);
+            if (val)
+                return val;
+        }
+
         var idx = 0;
         var len = path.length;
 
@@ -50,6 +61,8 @@
         template: null,
 
         _childTemplate: null,
+
+        get: function(x) { return getPath(this.model, x, true); },
 
         super: function() {
             if (this.options.template)
@@ -115,6 +128,8 @@
             var result = [];
 
             _.each(buffer || [], function (item) {
+                if (item === null || item === undefined) return;
+                if (item instanceof Handlebars.SafeString) item = item.toString();
                 var isstr = (typeof item === "string");
 
                 if (!prevString || !isstr) {
@@ -137,17 +152,16 @@
             var buffer = [],
                 options = {
                     data: {},
+                    isRenderData: true,
                     buffer: buffer
                 };
             
-            this._render(buffer, options);
-
-            var result = this.packBuffer(buffer);
+            var html = this._render(buffer, options);
 
             if (!this.el)
-                this.$el.append(result[0]);
+                this.$el.append(html);
             else
-                this.$el.replaceWith(result[0]);
+                this.$el.replaceWith(html);
 
             this._bindViews();
         },
@@ -159,8 +173,19 @@
             });
         },
 
+        /* ViewHelper _render function */
         _render: function(buffer, options) {
             this.preRender();
+
+            var context = this.options.bindingContext || this._context || this;
+
+            var data = {
+                view: this,
+                buffer: buffer,
+                isRenderData: true,
+            };
+
+            var elem = this.makeElement(context, {data:data});
 
             if (!this._template) {
                 var template = this.template;
@@ -171,38 +196,24 @@
                     if (tname) 
                         template = $('#' + tname).html();
                 }
+
                 if (!template) 
                     template = this.defaultTemplate;
 
-                if (template) {
+                if (template) 
                     this._template = Backbone.Distal.Handlebars.compile(template);
-                } else {
-                    this._template = this.makeElement;
-                }
             }
-
-            if (!this._template) 
-                return;
-
-            var context = this.options.bindingContext || this._context || this;
-
-            var data = {
-                view: this,
-                buffer: buffer,
-                isRenderData: true,
-                // keywords: keywords
-            };
 
             // var data = this.serializeData();
             // data._view = this;
-            var h = this._template(context, {data:data});
-            if (!(h instanceof $)) {
-                h = $(h);
+            if (this._template) {
+                var h = this._template(context, {data:data});
+                elem.append(h);
             }
 
             if (!this._distal_id)
                 this._distal_id = nextId();
-            h.attr({ 'data-distal-id' : this._distal_id });
+            elem.attr({ 'data-distal-id' : this._distal_id });
 
             if (options.data.view)
                 options.data.view._childViews.push(this);
@@ -212,22 +223,21 @@
                     var buffer = [];
                     var d2 = {
                         buffer: buffer,
-                        view: data.view
+                        view: data.view,
+                        isRenderData: true
                     };
                     var v = tmpl(context, { data: d2, view:this });
+                    elem.append(v);
 
+                    /*
                     _.each(this.packBuffer(buffer), function(item) {
-                        h.append(item);
+                        elem.append(item);
                     });
+                    */
                 }, this);
             }
 
-            // return (h instanceof $) ? h.html() : h;
-
-            if (h instanceof $)
-                buffer.push(h.wrap('<div></div>').parent().html());
-            else
-                buffer.push(h);
+            return elem.wrap('<div></div>').parent().html();
         }
     });
 
@@ -236,6 +246,7 @@
             this.super();
 
             if (this.collection) {
+                this.collection.on('reset', this.render, this);
                 this.collection.on('add', this.render, this);
                 this.collection.on('change', this.render, this);
                 this.collection.on('remove', this.render, this);
@@ -250,25 +261,43 @@
         _render: function(buffer, options) {
             this.preRender();
 
-            // console.log("collection render");
-
             var context = this.options.bindingContext || this._context || this;
 
             var data = {
                 view: this,
                 buffer: buffer,
                 isRenderData: true,
-                // keywords: keywords
             };
 
-            this._template = this.makeElement;
-            var h = this._template(context, {data:data});
-            if (!(h instanceof $))
-                h = $(h);
+            var elem = this.makeElement(context, {data:data});
+
+            if (!this._template) {
+                var template = this.template;
+
+                if (!template) {
+                    var tname = this.templateName || this.layoutName;
+
+                    if (tname) 
+                        template = $('#' + tname).html();
+                }
+
+                if (!template) 
+                    template = this.defaultTemplate;
+
+                if (template) 
+                    this._template = Backbone.Distal.Handlebars.compile(template);
+            }
+
+            // var data = this.serializeData();
+            // data._view = this;
+            if (this._template) {
+                var h = this._template(context, {data:data});
+                elem.append(h);
+            }
 
             if (!this._distal_id)
                 this._distal_id = nextId();
-            h.attr({ 'data-distal-id' : this._distal_id });
+            elem.attr({ 'data-distal-id' : this._distal_id });
 
             if (options.data.view)
                 options.data.view._childViews.push(this);
@@ -280,21 +309,21 @@
                     var buffer = [];
                     var d2 = {
                         buffer: buffer,
-                        view: data.view
+                        view: data.view,
+                        isRenderData: true
                     };
                     var v = tmpl(obj, { data: d2 });
-                    // console.log(buffer);
+                    elem.append(v);
 
+                    /*
                     _.each(this.packBuffer(buffer), function(item) {
-                        h.append(item);
+                        elem.append(item);
                     });
+                    */
                 }, this);
             }
 
-            if (h instanceof $)
-                buffer.push(h.wrap('<div></div>').parent().html());
-            else
-                buffer.push(h);
+            return elem.wrap('<div></div>').parent().html();
         }
     })
 
@@ -304,9 +333,11 @@
 
     // Handlebars.JavaScriptCompiler.prototype.namespace = "FrogFood.Handlebars";
 
+    /*
     Handlebars.JavaScriptCompiler.prototype.appendToBuffer = function(string) {
         return "data.buffer.push("+string+");";
     };
+    */
 
     Backbone.Distal.Handlebars.compile = function(string) {
         var ast = Handlebars.parse(string);
@@ -357,8 +388,6 @@
                 newView = path;
             }
 
-            // Ember.assert(Ember.String.fmt('You must pass a view class to the #view helper, not %@ (%@)', [path, newView]), Ember.View.detect(newView));
-
             newView = ViewHelper.viewClassFromHTMLOptions(newView, options, thisContext);
             var currentView = thisContext.view;
             var viewOptions = {
@@ -372,17 +401,13 @@
             viewOptions.templateData = options.data;
 
             if (fn) {
-                // Ember.assert("You cannot provide a template block if you also specified a templateName", !get(viewOptions, 'templateName') && !get(newView.proto(), 'templateName'));
                viewOptions._childTemplate = [fn];
             }
             viewOptions._parentView = currentView;
 
             var view = new newView(viewOptions);
-            // console.log(view);
 
-            var h = view._render(options.data.buffer, viewOptions);
-            // currentView.$el.append(view.render(view, viewOptions));
-            return h;
+            return new Handlebars.SafeString(view._render(options.data.buffer, viewOptions));
         },
 
         viewClassFromHTMLOptions: function(viewClass, options, thisContext) {
@@ -526,7 +551,7 @@
 
             var view = new newView(viewOptions);
 
-            return view._render(options.data.buffer, viewOptions);
+            return new Handlebars.SafeString(view._render(options.data.buffer, viewOptions));
         }
     };
 
@@ -549,7 +574,11 @@
     Handlebars.registerHelper('if', function(context, options) {
         var path = getPath(this, context, true);
 
-        context = path.call(this);
+        if (typeof path == "function") {
+            context = path.call(this);
+        } else {
+            context = path;
+        }
 
         if (!context || Handlebars.Utils.isEmpty(context)) {
             return options.inverse(this);

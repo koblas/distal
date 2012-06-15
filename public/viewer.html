@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <title>GitHub Organization Viewer</title>
+
+  <!-- Application styles -->
+  <link rel="stylesheet" href="/public/css/viewer/index.css">
+
+  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+  <script src="/public/js/vendor/underscore.js"></script>
+  <script src="/public/js/vendor/backbone.js"></script>
+  <script src="/public/js/vendor/handlebars.js"></script>
+  <script src="/public/js/liveview.js"></script>
+  <script src="/public/js/liveview_fields.js"></script>
+</head>
+
+<body>
+  <!-- Main container -->
+  <div role="main" id="main"></div>
+
+  <script type="text/x-handlebars" id="main_template">
+<div class="navbar navbar-fixed-top">
+  <div class="navbar-inner">
+    <div class="container-fluid">
+      <a class="brand" href="#"> GitHub Organization Viewer</a>
+      <span class="navbar-text">Backbone Boilerplate/LayoutManager Example</span>
+
+      <ul class="nav pull-right">
+        <li>
+          <a href="https://github.com/tbranyen/github-viewer">GitHub Source</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid">
+  <div class="row-fluid users">
+    {{view App.UserView class="container-fluid well" }}
+  </div>
+  <div class="row-fluid content">
+    <div class="span3 repos">{{view App.RepoView class="repos-wrapper" }}</div>
+    <div class="span9 commits">
+    {{#collection App.router.commits tagName="table" class="table table-striped" }}
+      {{view model=this tagName="tr" templateName="commit_template" }}
+    {{/collection}}
+    </div>
+  </div>
+
+  <hr>
+
+  <footer>
+    <p><a href="http://twitter.com/tbranyen" target="_blank">@tbranyen</a> | MIT License</p>
+  </footer>
+</div>
+  </script>
+
+<script type="text/x-handlebars" id="user_template">
+  <div class="row">
+    {{#view App.UserInputView tagName="form" class="span3 adjust" }}
+      <strong class="label">Enter an organization name:</strong>
+
+      <div class="input-append">
+        <input type="text" class="search-query org" name="org" value="bocoup"><button class="btn">Search</button> 
+      </div>
+   {{/view}}
+
+    <div class="span9">
+      <strong class="label">Select a user:</strong>
+      {{#collection App.userList tagName="ul" class="user-list unstyled clearfix" }}
+        {{#view App.UserItemView model=this tagName="li" }}
+            <button class="btn btn-small btn-info"><i class="icon-user icon-white"></i> {{get login }}</button>
+        {{/view}}
+      {{/collection}}
+    </div>
+  </div>
+</script>
+
+<script type="text/x-handlebars" id="repo_template">
+  {{#if count }}
+    <h4>Repos ({{ count }})</h4>
+    <hr/>
+  {{else}}
+    <h4>No repos found.</h4>
+  {{/if}}
+
+  {{#collection App.router.repos tagName="ul" class="nav nav-pills nav-stacked" }}
+    {{#view App.RepoItemView model=this tagName="li" }}
+      <a href="#">{{get name}}</a>
+    {{/view}}
+  {{/collection}}
+</script>
+
+<script type="text/x-handlebars" id="commit_template">
+{{#unless commit.message}}
+<td><strong>{{get commit.message }}</strong></td>
+<td></td>
+{{else}}
+<td><a href="https://github.com/{{get App.router.commits.user }}/{{get App.router.commits.repo }}/commit/{{get sha}}" target="_blank">{{get sha}}</a></td>
+<td><strong>{{get commit.message }}</strong></td>
+{{/unless}}
+</script>
+
+  <!-- Application source -->
+  <script src="/public/js/viewer_modules/repo.js"></script>
+  <script src="/public/js/viewer_modules/user.js"></script>
+  <script src="/public/js/viewer_modules/commit.js"></script>
+  <script src="/public/js/viewer.js"></script>
+</body>
+</html>
