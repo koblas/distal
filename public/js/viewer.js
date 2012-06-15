@@ -1,11 +1,13 @@
 (function() {
-    var app = {}, App = app;
+    var App = {};
 
-    window.App = app;
+    window.App = App;
 
     // Defining the application router, you can attach sub routers here.
     var AppView = Backbone.Distal.View.extend({
         templateName:  'main_template',
+
+        id: 'main',
 
         el: '#main'
     });
@@ -20,7 +22,7 @@
         },
 
         submit: function(evt) {
-            app.router.go("org", this.$(".org").val());
+            App.router.go("org", this.$(".org").val());
             return false;
         }
     });
@@ -41,11 +43,11 @@
 
         initialize: function() {
             this.super();
-            app.router.repos.on('reset', this.render, this);
+            App.router.repos.on('reset', this.render, this);
         },
 
         count: function() {
-            var len = app.router.repos.length;
+            var len = App.router.repos.length;
             return len == 0 ? false : (len + "");
         }
     });
@@ -59,15 +61,21 @@
         },
 
         preRender: function() {
-            if (App.router.repos.user == this.model.get('login'))
-                this.className = 'active';
+        },
+
+        active: function() {
+            return App.router.repos.user == this.model.get('login');
         },
 
         changeUser: function(evt) {
-            var org = app.router.users.org;
+            var org = App.router.users.org;
             var name = this.model.get("login");
 
-            app.router.go("org", org, "user", name);
+            this.$el.parent().find('.btn-primary').removeClass('btn-primary').addClass('btn-info');
+            this.$('button').removeClass('btn-info').addClass('btn-primary');
+            this.render();
+
+            App.router.go("org", org, "user", name);
         }
     });
 
@@ -86,21 +94,22 @@
     
         showCommits: function(ev) {
             var model = this.model;
-            var org = app.router.users.org;
-            var user = app.router.repos.user;
+            var org = App.router.users.org;
+            var user = App.router.repos.user;
 
             this.className = 'active';
+            this.$el.parent().find('.active').removeClass('active');
             this.render();
 
             // Easily create a URL.
-            app.router.go("org", org, "user", user, "repo", model.get("name"));
+            App.router.go("org", org, "user", user, "repo", model.get("name"));
 
             return false;
         },
     });
 
     /* 
-     *  Backbone core of the app.
+     *  Backbone core of the App.
      */
     var Router = Backbone.Router.extend({
         routes: {
@@ -111,8 +120,7 @@
         },
 
         index: function() {
-            var view = new AppView();
-            view.render();
+            var view = this.useLayout();
           
             // Reset to initial state.
             this.users.reset();
@@ -120,26 +128,24 @@
             this.commits.reset();
         },
 
-        org: function(name) {
-            var view = new AppView();
-            view.render();
+        org: function(org) {
+            // Set the organization.
+            this.users.org = org;
 
-            this.users.org = name;
+            var view = this.useLayout();
 
             // Reset to initial state.
             this.repos.reset();
             this.commits.reset();
-
-            // Set the organization.
-            this.users.org = name;
 
             // Fetch the data.
             this.users.fetch();
         },
 
         user: function(org, name) {
-            var view = new AppView();
-            view.render();
+            this.users.org = org;
+
+            var view = this.useLayout();
 
             // Reset to initial state.
             this.commits.reset();
@@ -147,8 +153,6 @@
             this.commits.user = null;
             this.commits.repo = null;
         
-            // Set the organization.
-            this.users.org = org;
             // Set the user name.
             this.repos.user = name;
 
@@ -158,14 +162,13 @@
         },
 
         repo: function(org, user, name) {
-            var view = new AppView();
-            view.render();
+            this.users.org = org;
+
+            var view = this.useLayout();
 
             // Reset to initial state.
             this.commits.reset();
 
-            // Set the organization.
-            this.users.org = org;
             // Set the user name.
             this.repos.user = user;
             // Set the repo name
@@ -190,32 +193,20 @@
             this.repos = new Repo.Collection();
             // Set up the commits.
             this.commits = new Commit.Collection();
-
-            App.userList = this.users;
         },
 
-    useLayout: function(name) {
-      // If already using this Layout, then don't re-inject into the DOM.
-      if (this.layout) {
-        return this.layout;
-      }
+        useLayout: function(name) {
+            //
+            // If already using this Layout, then don't re-inject into the DOM.
+            if (this.layout) 
+                return this.layout;
 
-      // Create a new Layout.
-      this.layout = new Backbone.Layout({
-        template: name,
-        className: "layout " + name,
-        id: "layout"
-      });
+            this.layout = new AppView();
+            this.layout.render();
 
-      // Insert into the DOM.
-      $("#main").html(this.layout.el);
-
-      // Render the layout.
-      this.layout.render();
-
-      return this.layout;
-    }
-  });
+            return this.layout;
+        }
+    });
 
     // Treat the jQuery ready function as the entry point to the application.
     // Inside this function, kick-off all initialization, everything up to this
@@ -223,7 +214,7 @@
     $(function() {
         // Define your master router on the application namespace and trigger all
         // navigation from this instance.
-        app.router = new Router();
+        App.router = new Router();
 
         // Trigger the initial route and enable HTML5 History API support
         Backbone.history.start({ hashChange: true });
