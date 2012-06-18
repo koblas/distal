@@ -1,0 +1,18 @@
+  <div class="row">
+    {{#view App.UserInputView tagName="form" class="span3 adjust" }}
+      <strong class="label">Enter an organization name:</strong>
+
+      <div class="input-append">
+        <input type="text" class="search-query org" name="org" value="{{#if App.router.users.org}}{{get App.router.users.org}}{{else}}bocoup{{/if}}"><button class="btn">Search</button> 
+      </div>
+   {{/view}}
+
+    <div class="span9">
+      <strong class="label">Select a user:</strong>
+      {{#collection App.router.users tagName="ul" class="user-list unstyled clearfix" }}
+        {{#view App.UserItemView model=this tagName="li" }}
+            <button class="btn btn-small {{#if active }}btn-primary{{else}}btn-info{{/if}}"><i class="icon-user icon-white"></i> {{get login }}</button>
+        {{/view}}
+      {{/collection}}
+    </div>
+  </div>

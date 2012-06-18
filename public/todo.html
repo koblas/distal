@@ -18,8 +18,8 @@
   <script src="/public/js/vendor/underscore.js"></script>
   <script src="/public/js/vendor/backbone.js"></script>
   <script src="/public/js/vendor/handlebars.js"></script>
-  <script src="/public/js/liveview.js"></script>
-  <script src="/public/js/liveview_fields.js"></script>
+  <script src="/public/js/backbone.distal.js"></script>
+  <script src="/public/js/backbone.distal.fields.js"></script>
 </head>
 <body>
   <h1>Todos</h1>
@@ -34,9 +34,8 @@
     {{remaining}} remaining
   {{/view}}
 
-  <!-- TODO need to figure out how to embed in label -->
   <label>
-    {{view Lv.Checkbox class="mark-all-done"}}
+    {{view Df.Checkbox class="mark-all-done"}}
     <span class="">Mark All as Done</span>
   </label>
 

@@ -1,0 +1,7 @@
+  {{#unless commit.message}}
+    <td><strong>{{get commit.message }}</strong></td>
+    <td></td>
+  {{else}}
+    <td><a href="https://github.com/{{get App.router.commits.user }}/{{get App.router.commits.repo }}/commit/{{get sha}}" target="_blank">{{get sha}}</a></td>
+    <td><strong>{{get commit.message }}</strong></td>
+  {{/unless}}

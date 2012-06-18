@@ -1,0 +1,12 @@
+  {{#if count }}
+    <h4>Repos ({{ count }})</h4>
+    <hr/>
+  {{else}}
+    <h4>No repos found.</h4>
+  {{/if}}
+
+  {{#collection App.router.repos tagName="ul" class="nav nav-pills nav-stacked" }}
+    {{#view App.RepoItemView model=this tagName="li" }}
+      <a href="#">{{get name}}</a>
+    {{/view}}
+  {{/collection}}

@@ -71,10 +71,10 @@
         */
     });
 
-    window.Lv = {};
+    window.Df = {};
 
-    window.Lv.Button = Backbone.Distal.Button;
-    window.Lv.Checkbox = Backbone.Distal.Checkbox;
-    window.Lv.TextField = Backbone.Distal.TextField;
+    window.Df.Button = Backbone.Distal.Button;
+    window.Df.Checkbox = Backbone.Distal.Checkbox;
+    window.Df.TextField = Backbone.Distal.TextField;
 
 })();

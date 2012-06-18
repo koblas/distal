@@ -9,19 +9,13 @@
 
   <!-- Application styles -->
   <link rel="stylesheet" href="/public/css/viewer/index.css">
-
-  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-  <script src="/public/js/vendor/underscore.js"></script>
-  <script src="/public/js/vendor/backbone.js"></script>
-  <script src="/public/js/vendor/backbone.collectioncache.js"></script>
-  <script src="/public/js/vendor/handlebars.js"></script>
-  <script src="/public/js/liveview.js"></script>
-  <script src="/public/js/liveview_fields.js"></script>
 </head>
 
 <body>
   <!-- Main container -->
   <div role="main" id="main"></div>
+
+  <script data-main="/public/js/viewer/config" src="/public/js/vendor/require.js"></script>
 
 <!--  The layout of everything -->
 <script type="text/x-handlebars" id="main_template">
@@ -111,7 +105,6 @@
 </script>
 
   <!-- Application source -->
-  <script src="/public/js/viewer_models.js"></script>
-  <script src="/public/js/viewer.js"></script>
+
 </body>
 </html>

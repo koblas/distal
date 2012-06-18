@@ -1,6 +1,28 @@
-(function() {
+require([
+  // Global
+  "app",
+
+  // Libs
+  "jquery",
+  "underscore",
+  "backbone",
+  
+  // Modules
+  "models",
+  // NOT USED - "templates",
+
+  // Extras
+  "distal",
+  "bootstrap"
+],
+
+function (app, $, _, Backbone, Models) {
     var App = {};
 
+    //
+    // This needs to be promoted to the "Window" level since we currently don't have
+    // a way to register "namespaces" in Distal
+    // 
     window.App = App;
 
     // Defining the application router, you can attach sub routers here.
@@ -188,11 +210,11 @@
 
         initialize: function() {
             // Set up the users.
-            this.users = new User.Collection();
+            this.users = new Models.User.Collection();
             // Set the repos.
-            this.repos = new Repo.Collection();
+            this.repos = new Models.Repo.Collection();
             // Set up the commits.
-            this.commits = new Commit.Collection();
+            this.commits = new Models.Commit.Collection();
         },
 
         useLayout: function(name) {
@@ -241,5 +263,4 @@
       Backbone.history.navigate(href, true);
     }
   });
-
-})();
+});
