@@ -17,6 +17,16 @@ does try and give a good example of what an app might look like (uses RequireJS 
 layouts.  As of this writing not 100% happy with what's there, but it's a framework to start from.  
 Currently noticing long langs in startup and in render switching (probably means I've got a performance bug).
 
+Test Server Usage
+-----------------
+
+It's a python/tornado server, so you'll need python and tornado installed.  Simple as:
+
+    ./server.py
+    # By default it run on 9000, if you want you can say --port=NNNN for a different port
+
+If you need tornado you should be able to do a ``pip install tornado`` or ``easy_install tornado``, but if that fails, look http://www.tornadoweb.org/ for additonal help.
+
 Example
 -------
 
