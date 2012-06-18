@@ -63,19 +63,6 @@
         <center><p>Designed and built by the folks at <a href="http://zrato.com" target="_blank">ZratoMedia</a></p></center>
       </footer>
 
-    <script src="./public/js/vendor/jquery.js"></script>
-    <script src="./public/js/vendor/json2.js"></script>
-    <script src="./public/js/vendor/underscore.js"></script>
-    <script src="./public/js/vendor/backbone.js"></script>
-    <script src="./public/js/vendor/backbone-localstorage.js"></script>
-    <script src="./public/js/vendor/backbone.marionette.js"></script>
-    <script src="./public/js/vendor/bootstrap.js"></script>
-    <script src="./public/js/vendor/showdown.js"></script>
-    <script src="./public/js/vendor/handlebars.js"></script>
-    <script src="./public/js/liveview.js"></script>
-    <script src="./public/data/dataset.js"></script>
-	<script src="./public/js/jobs.js"></script>
-
 	<script type="text/template" id="experimental-template">
 	<div class="span12">
       <div class="mini-layout fluid">
@@ -142,14 +129,14 @@
 
 <script id="menuheader-template" type="text/html">
 	<div>
-		<h2>{{menuheader}}</h2>
+		<h2>{{get menuheader}}</h2>
 	</div>
 </script>
 
 <script id="alljobs-template" type="text/html">
 	<div class="row">
 		<div class="span14">
-	        <b><a href="{{url}}">{{title}}</a></b>&nbsp;&nbsp;[{{city}}]
+	        <b><a href="{{get url}}">{{get title}}</a></b>&nbsp;&nbsp;[{{get city}}]
 		</div>
 	</div>
 </script>
@@ -157,12 +144,12 @@
 <script id="alljobs-description-template" type="text/html">
 	<div class="row">
 		<div class="span14">
-	        <b><a href="{{url}}">{{title}}</a></b>
+	        <b><a href="{{get url}}">{{get title}}</a></b>
 		</div>
 	</div>
 	<div class="row">
 		<div class="span14">
-	        <p>{{description}}</p>
+	        <p>{{get description}}</p>
 		</div>
 	</div>
 </script>
@@ -174,16 +161,16 @@
 <script id="pagejob-template" type="text/html">
 	<div class="row">
 		<div class="span14">
-	        <b><a href="{{url}}">{{title}}</a></b>
+	        <b><a href="{{get url}}">{{get title}}</a></b>
 	        <!--
 	        &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-	        <b>[{{titletags}}, {{descriptiontags}}]</b>
+	        <b>[{{get titletags}}, {{get descriptiontags}}]</b>
             -->
 		</div>
 	</div>
 	<div class="row">
 		<div class="span14">
-	        <p>{{description}}</p>
+	        <p>{{get description}}</p>
 		</div>
 	</div>
 </script>
@@ -196,7 +183,7 @@
       <li class="dropdown">
         <a class="dropdown-toggle" data-toggle="dropdown" href="#">Cities <b class="caret"></b></a>
         <ul id="menu-cities" class="dropdown-menu">
-			{{#each city}}
+			{{#each cities}}
 				<li><a href="#city/{{this}}">{{this}}</a></li>
 			{{/each}}
         </ul>
@@ -224,6 +211,8 @@
   </div>
 </header>
 </script>
+
+  <script data-main="/public/js/jobs/config" src="/public/js/vendor/require.js"></script>
 
 </body>
 </html>

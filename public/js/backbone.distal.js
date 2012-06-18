@@ -314,18 +314,73 @@
                     };
                     var v = tmpl(obj, { data: d2 });
                     elem.append(v);
+                }, this);
+            }
 
-                    /*
-                    _.each(this.packBuffer(buffer), function(item) {
-                        elem.append(item);
-                    });
-                    */
+            if (this.itemView) {
+                this.collection.each(function (obj) {
+                    var v = new this.itemView({model: obj});
+
+                    var e = v._render(buffer, options);
+
+                    elem.append(e);
+
+                    if (options.data.view)
+                        options.data.view._childViews.push(v);
                 }, this);
             }
 
             return elem.wrap('<div></div>').parent().html();
         }
     })
+
+    //
+    //  Layout
+    //
+    Backbone.Distal.LayoutViewHelper = function() {
+        this.initialize.apply(this, arguments);
+    };
+
+    _.extend(Backbone.Distal.LayoutViewHelper.prototype, {
+        initialize: function(id) {
+            this.id = id;
+            this.view = null;
+        },
+
+        show: function(view) {
+            if (view !== this.view) {
+                // TODO - remove references to view
+            }
+
+            view.id = this.id.substring(1);
+            view.setElement($(this.id));
+            view.render();
+
+            this.view = view;
+        },
+
+        hide: function() {
+        }
+    });
+
+    Backbone.Distal.LayoutView = function() {
+        this.initialize.apply(this, arguments);
+    };
+
+    _.extend(Backbone.Distal.LayoutView.prototype, {
+        _regions: null,
+
+        super: function() {
+            _.map(this._regions, function(name, value) {
+                this[value] = new Backbone.Distal.LayoutViewHelper(name);
+            }, this);
+        },
+
+        initialize: function(regions) {
+            this._regions = regions || {};
+            this.super();
+        }
+    });
 
     // Handlebars exentsions...
     //
@@ -585,5 +640,27 @@
         } else {
             return options.fn(this);
         }
-   });
+    });
+
+    Handlebars.registerHelper('each', function(context, options) {
+        var fn = options.fn, inverse = options.inverse;
+        var path = getPath(this, context, true);
+
+        if (typeof path == "function") {
+            context = path.call(this);
+        } else {
+            context = path;
+        }
+
+        var ret = "";
+
+        if (context && context.length > 0) {
+            for(var i=0, j=context.length; i<j; i++) {
+                ret = ret + fn(context[i]);
+            }
+        } else {
+            ret = inverse(this);
+        }
+        return ret;
+    });
 })();
