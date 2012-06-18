@@ -5,6 +5,17 @@ View Abstraction for Backbone.JS
 
 Inspired by EmberJS building a better view abstraction for BackboneJS. 
 
+There are three sample apps currently built, which I'm using as a test bed for how to approach things.
+
+* Todo - Really a basic app, based on the EmberJS ToDo app trying to demonstrate good simple
+abstractions for how things can plug together
+
+* GithubViewer - Based on the Layoutmanager, while I'm not focusing on using layouts in my version it 
+does try and give a good example of what an app might look like (uses RequireJS for parts).
+
+* Jobs - Based on the Backbone.Marioneete Jobs app, this is more an exploration on how to do 
+layouts.  As of this writing not 100% happy with what's there, but it's a framework to start from.  
+Currently noticing long langs in startup and in render switching (probably means I've got a performance bug).
 
 Example
 -------
@@ -72,6 +83,7 @@ Some of these were inspiration, some were just learning and getting and idea of 
 different problems with Backbone.
 
   * EmberJS - http://emberjs.com/
-  * Backbone.Layout - 
-  * Backbone.Marionette - 
-  * http://emberjs.com/examples/todos/ - Sample EmberJS Todo Application
+  * Backbone.Layout - https://github.com/tbranyen/backbone.layoutmanager
+  * Backbone.Marionette - https://github.com/derickbailey/backbone.marionette
+  * EmberJS Todo - http://emberjs.com/examples/todos/ - Sample EmberJS Todo Application
+  * Jobs App - https://github.com/stormabq/jobs - Michael Angerman's sample jobs app
