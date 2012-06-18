@@ -5,6 +5,8 @@
         return "distal_" + _id;
     }
 
+    var templateCache = {};
+
     function get(obj, keyName) {
         if (keyName === undefined && 'string' === typeof obj) {
             keyName = obj;
@@ -200,8 +202,14 @@
                 if (!template) 
                     template = this.defaultTemplate;
 
-                if (template) 
-                    this._template = Backbone.Distal.Handlebars.compile(template);
+                if (template) {
+                    var tmpl;
+
+                    if ((tmpl = templateCache[template]) === undefined) {
+                        templateCache[template] = tmpl = Backbone.Distal.Handlebars.compile(template);
+                    }
+                    this._template = tmpl;
+                }
             }
 
             // var data = this.serializeData();
@@ -284,8 +292,14 @@
                 if (!template) 
                     template = this.defaultTemplate;
 
-                if (template) 
-                    this._template = Backbone.Distal.Handlebars.compile(template);
+                if (template) {
+                    var tmpl;
+
+                    if ((tmpl = templateCache[template]) === undefined) {
+                        templateCache[template] = tmpl = Backbone.Distal.Handlebars.compile(template);
+                    }
+                    this._template = tmpl;
+                }
             }
 
             // var data = this.serializeData();
