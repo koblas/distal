@@ -54,7 +54,18 @@
         return root;
     };
 
-    Backbone.Distal = {};
+    Backbone.Distal = {
+        configure: function(opts) {
+            _.extend(this, opts);
+        },
+
+        //
+        //  Fetch a template
+        //
+        fetch: function(name) {
+            return $('#' + tname).html();
+        }
+    };
 
     Backbone.Distal.View = Backbone.View.extend({
         templateName: null,
@@ -67,6 +78,8 @@
         get: function(x) { return getPath(this.model, x, true); },
 
         super: function() {
+            if (this.options.templateName)
+                this.templateName = this.options.templateName;
             if (this.options.template)
                 this.template = this.options.template;
             if (this.options._childTemplate)
@@ -160,10 +173,22 @@
             
             var html = this._render(buffer, options);
 
-            if (!this.el)
+            if (!this.el) {
+                console.log("append", this.el, html);
                 this.$el.append(html);
-            else
-                this.$el.replaceWith(html);
+            } else {
+                if (this.$el.get(0).tagName == 'BODY') {
+                    var $el = $(html);
+                    var $body = $(document.body);
+                    document.body.innerHTML = $el.html();
+                    var b = $el.get(0);
+                    _.map(b.attributes, function(idx, attr) {
+                        $body.attr(idx.name, idx.value);
+                    });
+                } else {
+                    this.$el.replaceWith(html);
+                }
+            }
 
             this._bindViews();
         },
@@ -196,7 +221,7 @@
                     var tname = this.templateName || this.layoutName;
 
                     if (tname) 
-                        template = $('#' + tname).html();
+                        template = Backbone.Distal.fetch(tname);
                 }
 
                 if (!template) 
@@ -286,7 +311,7 @@
                     var tname = this.templateName || this.layoutName;
 
                     if (tname) 
-                        template = $('#' + tname).html();
+                        template = Backbone.Distal.fetch(tname);
                 }
 
                 if (!template) 
@@ -361,37 +386,59 @@
             this.view = null;
         },
 
-        show: function(view) {
+        ///
+        //  Show a specific view 
+        //
+        //  For example - The following two statement are the same
+        //    layout.main.show(new Backbone.Distal.View({ templateName: 'item_list' }));
+        //    layout.main.show('item_list');
+        //
+        //
+        show: function(view, options) {
+            options = options || {};
+
+            if (_.isString(view)) {
+                var vclass = Backbone.Distal.View.extend(options);
+                view = new vclass({ templateName: view });
+            }
+
             if (view !== this.view) {
                 // TODO - remove references to view
             }
 
-            view.id = this.id.substring(1);
-            view.setElement($(this.id));
+            if (view == null || view == undefined)
+                view = this.view;
+
+            if (view == null) {
+                this.view = null;
+                return;
+            }
+
+            var $el = $(this.id);
+
+            $el.html("<div></div>");
+            view.setElement($el.children().get(0));
             view.render();
 
             this.view = view;
         },
 
         hide: function() {
+            if (this.view && this.view.$el)
+                this.view.$el.remove();
         }
     });
 
-    Backbone.Distal.LayoutView = function() {
-        this.initialize.apply(this, arguments);
-    };
-
-    _.extend(Backbone.Distal.LayoutView.prototype, {
+    Backbone.Distal.LayoutView = Backbone.Distal.View.extend({
         _regions: null,
 
-        super: function() {
+        initialize: function(regions) {
+            this._regions = regions || this.regions || {};
+
             _.map(this._regions, function(name, value) {
                 this[value] = new Backbone.Distal.LayoutViewHelper(name);
             }, this);
-        },
 
-        initialize: function(regions) {
-            this._regions = regions || {};
             this.super();
         }
     });
