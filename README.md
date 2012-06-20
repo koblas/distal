@@ -1,9 +1,56 @@
-distal
+Distal
 ======
 
-View Abstraction for Backbone.JS
+Inspired by EmberJS building a better view abstraction for BackboneJS, but not as overgrown as Ember...
 
-Inspired by EmberJS building a better view abstraction for BackboneJS. 
+Why Distal - or the Problem Statement
+-------------------------------------
+
+Backbone is pretty cool.  I think it has done a good job of the Model/Collection/Sync approach to
+data.  The challenge is that while the Backbone.View object is a good simple abstraction for a view
+as soon as you want to do something more involved.  Either with a "layout" concept, or having collections
+just do the right thing on presentation you'll discover that you're writing a lot of boilerplate code.
+
+For instance why is your render function something like - there are many varients out there::
+
+    render: function() {
+        this.collection.each(function(tweet) {
+            var view = new TweetView({ model : tweet });
+            this.$el.append(tweetView.render().el);
+        }, this);
+        return this;
+    }
+
+Clearly we could just wrap render in a FizzleView which removes the render, but that's not quite the 
+objective.  Real goal is to get the View focused on events and handling of events not on rendering
+since 99.9% of the time that's really views with composite views.
+
+Maybe I want something more like this:
+
+    <div><a class="add btn" href="add/{{ lid }}">Add New Item</a></div>
+    <!-- 
+      -- iterate over all the elements of App.data.gear 
+      -->
+    {{#collection App.data.gear id="items"}}
+      <!-- 
+        -- display the item, attaching the App.ItemView object to the contained HTML 
+        --  event handlers, or other helper functions
+        -->
+      {{#view App.ItemView model=this class="item-group" }}
+        <div><a data-toggle="collapse" data-target="#item-{{cid}}">{{ title }}</a></div>
+        <div id="item-{{cid}}" class="collapse">{{ description }}</div>
+      {{/view}}
+    {{/collection}}
+
+So, now most of the rendering code and *chained* rendering code things compositing other View objects
+can now be left back in the HTML rather than putting everything in your ''render: function....''
+
+Final Note: Why not EmberJS?  Simple: This is about Backbone and Backbone style JavaScript, I don't want 
+the whole system fixated on magic through "...Binding" or other things, it's goal is to be explicit and
+straightfoward to create Views which still look 99% like Backbone Views.
+
+Examples
+--------
 
 There are three sample apps currently built, which I'm using as a test bed for how to approach things.
 
