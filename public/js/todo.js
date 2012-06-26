@@ -24,11 +24,11 @@
 
     Todos.StatsView = Backbone.Distal.View.extend({
         initialize: function() {
-            this.super();
             this.remaining = 0;
 
             Todos.todoList.on('change', this.render, this);
             Todos.todoList.on('add', this.render, this);
+            this.on('pre_render', this.preRender, this);
         },
 
         events: {
@@ -70,6 +70,10 @@
     Todos.ItemView = Backbone.Distal.View.extend({
         events: {
             'change input' : 'checked'
+        },
+
+        initialize: function() {
+            this.on('pre_render', this.preRender, this);
         },
 
         get: function(x) { return this.model.get(x); },

@@ -77,18 +77,18 @@
 
         get: function(x) { return getPath(this.model, x, true); },
 
-        super: function() {
-            if (this.options.templateName)
-                this.templateName = this.options.templateName;
-            if (this.options.template)
-                this.template = this.options.template;
-            if (this.options._childTemplate)
-                this._childTemplate = this.options._childTemplate;
-            this._childViews = [];
-        },
+        constructor: function(options) {
+            options = options || {};
 
-        initialize: function() {
-            this.super();
+            if (options.templateName)
+                this.templateName = options.templateName;
+            if (options.template)
+                this.template = options.template;
+            if (options._childTemplate)
+                this._childTemplate = options._childTemplate;
+            this._childViews = [];
+
+            Backbone.View.apply(this, arguments);
         },
 
         serializeData: function(){
@@ -158,8 +158,6 @@
             return result;
         },
 
-        preRender: function() {},
-
         /*
          * General render function that will get called by developers
          */
@@ -171,10 +169,10 @@
                     buffer: buffer
                 };
             
+            this.trigger('pre_render');
             var html = this._render(buffer, options);
 
             if (!this.el) {
-                console.log("append", this.el, html);
                 this.$el.append(html);
             } else {
                 if (this.$el.get(0).tagName == 'BODY') {
@@ -190,19 +188,21 @@
                 }
             }
 
-            this._bindViews();
+            this._bindViews(this);
         },
 
-        _bindViews: function() {
+        _bindViews: function(parentView) {
             this.setElement($('[data-distal-id=' + this._distal_id + ']'));
             _.each(this._childViews, function(view) {
-                view._bindViews();
+                view.parentView = parentView;
+                view._bindViews(view);
             });
+            this.trigger('post_render');
         },
 
         /* ViewHelper _render function */
         _render: function(buffer, options) {
-            this.preRender();
+            this.trigger('pre_render');
 
             var context = this.options.bindingContext || this._context || this;
 
@@ -220,12 +220,18 @@
                 if (!template) {
                     var tname = this.templateName || this.layoutName;
 
+                    if (_.isFunction(tname))
+                        tname = tname.call(this);
+
                     if (tname) 
                         template = Backbone.Distal.fetch(tname);
                 }
 
                 if (!template) 
                     template = this.defaultTemplate;
+
+                if (_.isFunction(template))
+                    template = template.call(this);
 
                 if (template) {
                     var tmpl;
@@ -275,8 +281,8 @@
     });
 
     Backbone.Distal.CollectionView = Backbone.Distal.View.extend({
-        initialize: function() {
-            this.super();
+        constructor: function() {
+            Backbone.Distal.View.prototype.constructor.apply(this, arguments);
 
             if (this.collection) {
                 this.collection.on('reset', this.render, this);
@@ -286,13 +292,8 @@
             }
         },
 
-        on_change: function() {
-            // console.log("Backbone.Distal.CollectionView change event");
-            this.rerender();
-        },
-
         _render: function(buffer, options) {
-            this.preRender();
+            this.trigger('pre_render');
 
             var context = this.options.bindingContext || this._context || this;
 
@@ -310,12 +311,18 @@
                 if (!template) {
                     var tname = this.templateName || this.layoutName;
 
+                    if (_.isFunction(tname))
+                        tname = tname.call(this);
+
                     if (tname) 
                         template = Backbone.Distal.fetch(tname);
                 }
 
                 if (!template) 
                     template = this.defaultTemplate;
+
+                if (_.isFunction(template))
+                    template = template.call(this);
 
                 if (template) {
                     var tmpl;
@@ -438,8 +445,6 @@
             _.map(this._regions, function(name, value) {
                 this[value] = new Backbone.Distal.LayoutViewHelper(name);
             }, this);
-
-            this.super();
         }
     });
 
@@ -541,65 +546,16 @@
                 dup = true;
             }
 
-            if (hash.classBinding) {
-                extensions.classNameBindings = hash.classBinding.split(' ');
-                dup = true;
-            }
-
-            if (hash.classNameBindings) {
-                extensions.classNameBindings = hash.classNameBindings.split(' ');
-                dup = true;
-            }
-
-            if (hash.attributeBindings) {
-                // Ember.assert("Setting 'attributeBindings' via Handlebars is not allowed. Please subclass Ember.View and set it there instead.");
-                extensions.attributeBindings = null;
-                dup = true;
-            }
-
             if (dup) {
                 hash = _.extend({}, hash);
                 delete hash.id;
                 delete hash['class'];
-                delete hash.classBinding;
-            }
-
-            // Look for bindings passed to the helper and, if they are
-            // local, make them relative to the current context instead of the
-            // view.
-            var path, normalized;
-
-            for (var prop in hash) {
-                if (!hash.hasOwnProperty(prop)) 
-                    continue;
-
-                // Test if the property ends in "Binding"
-                /*
-                if (Ember.IS_BINDING.test(prop)) {
-                    path = hash[prop];
-
-                    normalized = Ember.Handlebars.normalizePath(null, path, data);
-                    if (normalized.isKeyword) {
-                        hash[prop] = 'templateData.keywords.'+path;
-                    } else if (!Ember.isGlobalPath(path)) {
-                        if (path === 'this') {
-                            hash[prop] = 'bindingContext';
-                        } else {
-                            hash[prop] = 'bindingContext.'+path;
-                        }
-                    }
-                }
-                */
             }
 
             // Make the current template context available to the view
             // for the bindings set up above.
             extensions.bindingContext = thisContext;
 
-            //console.log("HASH", hash);
-            //console.log("EXT", extensions);
-
-            // return viewClass.extend(hash, extensions);
             return viewClass.extend(_.extend({}, hash, extensions));
         }
     };

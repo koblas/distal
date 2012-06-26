@@ -64,7 +64,6 @@ function (app, $, _, Backbone, Models) {
         templateName:  'repo_template',
 
         initialize: function() {
-            this.super();
             App.router.repos.on('reset', this.render, this);
         },
 
@@ -80,9 +79,6 @@ function (app, $, _, Backbone, Models) {
     App.UserItemView = Backbone.Distal.View.extend({
         events: {
             click : 'changeUser'
-        },
-
-        preRender: function() {
         },
 
         active: function() {
@@ -107,6 +103,10 @@ function (app, $, _, Backbone, Models) {
     App.RepoItemView = Backbone.Distal.View.extend({
         events: {
             click: "showCommits"
+        },
+
+        initialize: function() {
+            this.on('pre_render', this.preRender, this);
         },
 
         preRender: function() {
