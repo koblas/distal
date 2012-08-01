@@ -95,7 +95,7 @@
         },
 
         close: function() {
-            console.log("Closing view");
+            // console.log("Closing view");
             _.each(this._childViews, function(view) {
                 view.close();
             });
@@ -455,7 +455,7 @@
         },
 
         close: function() {
-            console.log("Closing layout helper view");
+            // console.log("Closing layout helper view");
             if (this.view)
                 this.view.close();
             this.view = null;
@@ -479,7 +479,7 @@
         },
 
         close: function() {
-            console.log("Closing LayoutView");
+            // console.log("Closing LayoutView");
 
             _.map(this._regions, function(name, value) {
                 this[value].close();
