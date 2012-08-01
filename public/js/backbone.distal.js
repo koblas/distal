@@ -74,6 +74,7 @@
         template: null,
 
         _childTemplate: null,
+        _emptyTemplate: null,
 
         get: function(x) { return getPath(this.model, x, true); },
 
@@ -86,9 +87,23 @@
                 this.template = options.template;
             if (options._childTemplate)
                 this._childTemplate = options._childTemplate;
+            if (options._emptyTemplate)
+                this._emptyTemplate = options._emptyTemplate;
             this._childViews = [];
 
             Backbone.View.apply(this, arguments);
+        },
+
+        close: function() {
+            console.log("Closing view");
+            _.each(this._childViews, function(view) {
+                view.close();
+            });
+
+            this.remove();
+            this.unbind();
+            if (this.onClose)
+                this.onClose();
         },
 
         serializeData: function(){
@@ -158,6 +173,8 @@
             return result;
         },
 
+        preRender: function() {},
+
         /*
          * General render function that will get called by developers
          */
@@ -202,6 +219,7 @@
 
         /* ViewHelper _render function */
         _render: function(buffer, options) {
+            this.preRender();
             this.trigger('pre_render');
 
             var context = this.options.bindingContext || this._context || this;
@@ -223,7 +241,7 @@
                     if (_.isFunction(tname))
                         tname = tname.call(this);
 
-                    if (tname) 
+                    if (tname)
                         template = Backbone.Distal.fetch(tname);
                 }
 
@@ -285,14 +303,15 @@
             Backbone.Distal.View.prototype.constructor.apply(this, arguments);
 
             if (this.collection) {
-                this.collection.on('reset', this.render, this);
-                this.collection.on('add', this.render, this);
+                this.collection.on('reset',  this.render, this);
+                this.collection.on('add',    this.render, this);
                 this.collection.on('change', this.render, this);
                 this.collection.on('remove', this.render, this);
             }
         },
 
         _render: function(buffer, options) {
+            this.preRender();
             this.trigger('pre_render');
 
             var context = this.options.bindingContext || this._context || this;
@@ -348,7 +367,11 @@
             if (options.data.view)
                 options.data.view._childViews.push(this);
 
-            if (this._childTemplate) {
+            if (!this.collection || this.collection.length == 0) {
+                tmpl = this._emptyTemplate[0];
+
+                elem.append(tmpl(this, { data: data }));
+            } else if (this._childTemplate) {
                 tmpl = this._childTemplate[0];
 
                 this.collection.each(function (obj) {
@@ -410,11 +433,12 @@
             }
 
             if (view !== this.view) {
-                // TODO - remove references to view
+                this.close();
             }
 
-            if (view == null || view == undefined)
+            if (view == null || view == undefined) {
                 view = this.view;
+            }
 
             if (view == null) {
                 this.view = null;
@@ -428,6 +452,13 @@
             view.render();
 
             this.view = view;
+        },
+
+        close: function() {
+            console.log("Closing layout helper view");
+            if (this.view)
+                this.view.close();
+            this.view = null;
         },
 
         hide: function() {
@@ -445,6 +476,19 @@
             _.map(this._regions, function(name, value) {
                 this[value] = new Backbone.Distal.LayoutViewHelper(name);
             }, this);
+        },
+
+        close: function() {
+            console.log("Closing LayoutView");
+
+            _.map(this._regions, function(name, value) {
+                this[value].close();
+            }, this);
+
+            this.remove();
+            this.unbind();
+            if (this.onClose)
+                this.onClose();
         }
     });
 
@@ -523,6 +567,9 @@
 
             if (fn) {
                viewOptions._childTemplate = [fn];
+            }
+            if (inverse) {
+               viewOptions._emptyTemplate = [inverse];
             }
             viewOptions._parentView = currentView;
 
@@ -618,6 +665,9 @@
 
             if (fn) {
                viewOptions._childTemplate = [fn];
+            }
+            if (inverse) {
+               viewOptions._emptyTemplate = [inverse];
             }
             viewOptions._parentView = currentView;
 
