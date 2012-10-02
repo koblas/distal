@@ -95,7 +95,6 @@
         },
 
         close: function() {
-            // console.log("Closing view");
             _.each(this._childViews, function(view) {
                 view.close();
             });
@@ -173,7 +172,10 @@
             return result;
         },
 
-        preRender: function() {},
+        /*
+         *  General hook to set things up after rendering, called prior to the trigger call
+         */
+        post_render: function() {},
 
         /*
          * General render function that will get called by developers
@@ -214,12 +216,12 @@
                 view.parentView = parentView;
                 view._bindViews(view);
             });
+            this.post_render();
             this.trigger('post_render');
         },
 
         /* ViewHelper _render function */
         _render: function(buffer, options) {
-            this.preRender();
             this.trigger('pre_render');
 
             var context = this.options.bindingContext || this._context || this;
@@ -311,7 +313,6 @@
         },
 
         _render: function(buffer, options) {
-            this.preRender();
             this.trigger('pre_render');
 
             var context = this.options.bindingContext || this._context || this;
@@ -455,7 +456,6 @@
         },
 
         close: function() {
-            // console.log("Closing layout helper view");
             if (this.view)
                 this.view.close();
             this.view = null;
@@ -479,7 +479,6 @@
         },
 
         close: function() {
-            // console.log("Closing LayoutView");
 
             _.map(this._regions, function(name, value) {
                 this[value].close();
@@ -650,6 +649,9 @@
                 collection = path;
             }
 
+            if ('function' === typeof collection) 
+                collection = collection.apply(thisContext);
+
             newView = ViewHelper.viewClassFromHTMLOptions(Backbone.Distal.CollectionView, 
                                                             options, thisContext);
 
@@ -729,5 +731,24 @@
             ret = inverse(this);
         }
         return ret;
+    });
+
+    Handlebars.registerHelper('ifequal', function(v1, v2, options) {
+        var p1 = getPath(this, v1, true);
+        var p2 = getPath(this, v2, true);
+
+        var c1 = (typeof p1 == "function") ? p1.call(this) : p1;
+        var c2 = (typeof p2 == "function") ? p2.call(this) : p2;
+
+        if (c1 == undefined)
+            c1 = v1;
+        if (c2 == undefined)
+            c2 = v2;
+        
+        if (c1 != c2) {
+            return options.inverse(this);
+        } else {
+            return options.fn(this);
+        }
     });
 })();
