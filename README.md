@@ -1,7 +1,7 @@
 Distal
 ======
 
-Inspired by EmberJS building a better view abstraction for BackboneJS, but not as overgrown as Ember...
+Inspired by EmberJS building a better view abstraction for BackboneJS, but not as overgrown as Ember.
 
 Why Distal - or the Problem Statement
 -------------------------------------
@@ -55,14 +55,13 @@ Examples
 There are three sample apps currently built, which I'm using as a test bed for how to approach things.
 
 * Todo - Really a basic app, based on the EmberJS ToDo app trying to demonstrate good simple
-abstractions for how things can plug together
+    abstractions for how things can plug together
 
 * GithubViewer - Based on the Layoutmanager, while I'm not focusing on using layouts in my version it 
-does try and give a good example of what an app might look like (uses RequireJS for parts).
+    does try and give a good example of what an app might look like (uses RequireJS for parts).
 
 * Jobs - Based on the Backbone.Marioneete Jobs app, this is more an exploration on how to do 
-layouts.  As of this writing not 100% happy with what's there, but it's a framework to start from.  
-Currently noticing long langs in startup and in render switching (probably means I've got a performance bug).
+    layouts.  As of this writing not 100% happy with what's there, but it's a framework to start from.  
 
 Test Server Usage
 -----------------
@@ -132,6 +131,32 @@ From the [todo.js](distal/blob/master/public/js/todo.js) file
     });
 ```
    
+Documentation ToDo's
+--------------------
+
+* Document the {{#view ...}} and {{#collection ...}} constructor
+
+* document the base fields extends for Views
+  - itemView
+  - className
+  - template
+  - templateName
+  - other fields are passed throught
+
+* initialize
+* post_render
+
+* document the events
+  - pre_render
+  - post_render
+
+* document event based views
+  - event-sink=     # where the event will be sent - clearly some other object
+  - event-data=     # what data is in the trigger (default the view)
+  - distal-on=      # "ACTION EVENT"
+
+* Layouts
+  - show
 
 Credits
 -------
