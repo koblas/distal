@@ -8,15 +8,12 @@
     var templateCache = {};
 
     function get(obj, keyName) {
-        if (keyName === undefined && 'string' === typeof obj) {
-            keyName = obj;
-            obj = Ember;
-        }
-
         if (!obj) return undefined;
-            var ret = obj[keyName];
-            if (ret===undefined && 'function'===typeof obj.unknownProperty) {
-                ret = obj.unknownProperty(keyName);
+
+        var ret = obj[keyName];
+
+        if (ret===undefined && 'function'===typeof obj.unknownProperty) {
+            ret = obj.unknownProperty(keyName);
         }
         return ret;
     };
@@ -27,17 +24,6 @@
             _checkGlobal = false;
         }
 
-        if (root instanceof Backbone.Model) {
-            var val = getPath(root.attributes, path, false);
-            if (val)
-                return val;
-        }
-        if (root instanceof Backbone.View && root.model !== undefined) {
-            var val = getPath(root.model.attributes, path, false);
-            if (val)
-                return val;
-        }
-
         var idx = 0;
         var len = path.length;
 
@@ -46,7 +32,16 @@
                 next = len;
 
             var key = path.slice(idx, next);
-            root = get(root, key);
+
+            if (root instanceof Backbone.Model) {
+                root = root.get(key);
+            } else if (key in root) {
+                root = get(root, key);
+            } else if (root instanceof Backbone.View && root.model instanceof Backbone.Model) {
+                root = root.model.get(key);
+            } else {
+                root = get(root, key);
+            }
         }
 
         if (!root && _checkGlobal)
@@ -83,6 +78,9 @@
 
             if (options.templateName)
                 this.templateName = options.templateName;
+            // TODO - should probably extend the template attributes
+            if (options.attributes)
+                this.attributes = options.attributes;
             if (options.template)
                 this.template = options.template;
             if (options._childTemplate)
@@ -91,6 +89,13 @@
                 this._emptyTemplate = options._emptyTemplate;
             this._childViews = [];
 
+            if (this.model) 
+                this.listenTo(this.model, 'change', this.render);
+            if (this.attributes) {
+                this._event_data = this.attributes['event-data'] || this;
+                this._event_sink = this.attributes['event-sink'];
+            }
+
             Backbone.View.apply(this, arguments);
         },
 
@@ -98,7 +103,14 @@
             _.each(this._childViews, function(view) {
                 view.close();
             });
+            this._childViews = [];
 
+            this.stopListening();
+
+            if (this._parentDataView) {
+                this._parentDataView._childViews = _.without(this._parentDataView._childViews, this);
+            }
+            
             this.remove();
             this.unbind();
             if (this.onClose)
@@ -130,7 +142,7 @@
             if (this.id)
                 attr['id'] = this.id;
             if (this.className)
-                clist.push(this.className);
+                clist.push(_.isFunction(this.className) ? this.className() : this.className);
             if (this.classNames) {
                 _.each(this.classNames, function(k) {
                     clist.push(k);
@@ -139,11 +151,8 @@
             if (clist.length != 0)
                 attr['class'] = clist.join(' ');
 
-            if (this.attributeBindings) {
-                _.each(this.attributeBindings, function(k) {
-                    if (this[k])
-                        attr[k] = this[k];
-                }, this);
+            if (this.attributes) {
+                _.extend(attr, _.omit(this.attributes, 'class', 'model', 'id', 'tagName', 'template', 'event-sink', 'event-data'));
             }
             $el.attr(attr);
 
@@ -187,7 +196,7 @@
                     isRenderData: true,
                     buffer: buffer
                 };
-            
+
             this.trigger('pre_render');
             var html = this._render(buffer, options);
 
@@ -203,7 +212,7 @@
                         $body.attr(idx.name, idx.value);
                     });
                 } else {
-                    this.$el.replaceWith(html);
+                    this.$el.empty().replaceWith(html);
                 }
             }
 
@@ -216,6 +225,28 @@
                 view.parentView = parentView;
                 view._bindViews(view);
             });
+
+            var self = this;
+
+            if (this._event_sink) {
+                // simple helper function
+                function bind($el) {
+                    var val = $el.attr('distal-on').split(' ', 2);
+
+                    $el.bind(val[0], self, function(evt) {
+                        self._event_sink.trigger(val[1], self._event_data);
+                    });
+                }
+
+                if (this.$el.is('[distal-on]')) {
+                    bind(this.$el);
+                }
+
+                this.$el.has('[distal-on]').each(function(idx, el) {
+                    bind($(el));
+                });
+            }
+
             this.post_render();
             this.trigger('post_render');
         },
@@ -274,8 +305,11 @@
                 this._distal_id = nextId();
             elem.attr({ 'data-distal-id' : this._distal_id });
 
-            if (options.data.view)
+            if (options.data && options.data.view) {
                 options.data.view._childViews.push(this);
+                // save that we're stored above us - maybe this should be in _parentView
+                this._parentDataView = options.data.view;
+            }
 
             if (this._childTemplate) {
                 _.map(this._childTemplate, function(tmpl) {
@@ -305,13 +339,13 @@
             Backbone.Distal.View.prototype.constructor.apply(this, arguments);
 
             if (this.collection) {
-                this.collection.on('reset',  this.render, this);
-                this.collection.on('add',    this.render, this);
-                this.collection.on('change', this.render, this);
-                this.collection.on('remove', this.render, this);
+                this.listenTo(this.collection, 'reset', this.render);
+                this.listenTo(this.collection, 'add', this.render);
+                this.listenTo(this.collection, 'remove', this.render);
             }
         },
-
+        
+        /* collection render */
         _render: function(buffer, options) {
             this.trigger('pre_render');
 
@@ -361,19 +395,35 @@
                 elem.append(h);
             }
 
+
             if (!this._distal_id)
                 this._distal_id = nextId();
             elem.attr({ 'data-distal-id' : this._distal_id });
 
-            if (options.data.view)
+            if (options.data.view) {
                 options.data.view._childViews.push(this);
+                this._parentDataView = options.data.view;
+            }
 
             if (!this.collection || this.collection.length == 0) {
-                tmpl = this._emptyTemplate[0];
+                if (this._emptyTemplate != null) {
+                    tmpl = this._emptyTemplate[0];
 
-                elem.append(tmpl(this, { data: data }));
+                    elem.append(tmpl(this, { data: data }));
+                }
             } else if (this._childTemplate) {
                 tmpl = this._childTemplate[0];
+
+                var oldset = _.map(this._childViews, function (view) { return view.model.cid; });
+                var newset = this.collection.map(function (obj) { return obj.cid; });
+
+                this._childViews = _.filter(this._childViews, function(view) {
+                    if (! _.contains(newset, view.model.cid)) {
+                        view.close();
+                        return false;
+                    }
+                    return true;
+                });
 
                 this.collection.each(function (obj) {
                     var buffer = [];
@@ -382,23 +432,28 @@
                         view: data.view,
                         isRenderData: true
                     };
-                    var v = tmpl(obj, { data: d2 });
-                    elem.append(v);
-                }, this);
-            }
+                    var e;
 
-            if (this.itemView) {
-                this.collection.each(function (obj) {
-                    var v = new this.itemView({model: obj});
-
-                    var e = v._render(buffer, options);
-
+                    if (_.contains(oldset, obj.cid)) {
+                        var v = _.find(this._childViews, function (view) { return view.model.cid == obj.cid; });
+                        e = v._render(buffer, d2);
+                    } else {
+                        e = tmpl(obj, { data: d2 });
+                    }
                     elem.append(e);
-
-                    if (options.data.view)
-                        options.data.view._childViews.push(v);
                 }, this);
             }
+
+            if (this.inverse !== undefined && this.collection.length === 0) {
+                _.each(removed_views, function(view) {
+                    view.close();
+                });
+                this._childViews = [];
+
+                return this.inverse();
+            }
+
+            // TODO - we should really only remove child views that are going away...
 
             return elem.wrap('<div></div>').parent().html();
         }
@@ -559,16 +614,12 @@
                 model: data.model,
                 view: options.data.view,
                 collection: data.collection,
-                data: options.data
+                data: options.data,
+                attributes: hash
             };
-
-            viewOptions.templateData = options.data;
 
             if (fn) {
                viewOptions._childTemplate = [fn];
-            }
-            if (inverse) {
-               viewOptions._emptyTemplate = [inverse];
             }
             viewOptions._parentView = currentView;
 
@@ -657,19 +708,15 @@
 
             var currentView = thisContext.view;
             var viewOptions = {
-                view: options.data.view,
-                templateData: options.data,
-                data: options.data,
-                collection: collection
+                view         : options.data.view,
+                templateData : options.data,
+                data         : options.data,
+                collection   : collection,
+                inverse      : inverse
             };
-
-            viewOptions.templateData = options.data;
 
             if (fn) {
                viewOptions._childTemplate = [fn];
-            }
-            if (inverse) {
-               viewOptions._emptyTemplate = [inverse];
             }
             viewOptions._parentView = currentView;
 
