@@ -63,7 +63,7 @@
         //  Fetch a template
         //
         fetch: function(name) {
-            return $('#' + tname).html();
+            return $('#' + name).html();
         }
     };
 
