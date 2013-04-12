@@ -24,19 +24,17 @@
 
     Todos.StatsView = Backbone.Distal.View.extend({
         initialize: function() {
-            this.remaining = 0;
-
-            Todos.todoList.on('change', this.render, this);
-            Todos.todoList.on('add', this.render, this);
-            this.on('pre_render', this.preRender, this);
+            // because we're not a collection view, we need to bind
+            this.listenTo(Todos.todoList, 'change', this.render);
+            this.listenTo(Todos.todoList, 'add', this.render);
         },
 
         events: {
             'click button' : 'clear_completed'
         },
 
-        preRender: function() {
-            this.remaining = Todos.todoList.reduce(function(memo, todo) { 
+        remaining: function() {
+            return Todos.todoList.reduce(function(memo, todo) { 
                                                 return memo + (todo.get('isDone') ? 0 : 1);
                                             }, 0);
         },
@@ -49,7 +47,7 @@
         }
     });
 
-    Todos.CreateTodoView = Backbone.Distal.TextField.extend({
+    Todos.CreateTodoView = Backbone.Distal.View.extend({
         events: {
             'keydown' : 'create',
         },
@@ -69,28 +67,13 @@
 
     Todos.ItemView = Backbone.Distal.View.extend({
         events: {
-            'change input' : 'checked'
+            'change input' : function(evt) {
+                this.model.set({'isDone' : this.$('input').attr('checked') === 'checked'});
+            }
         },
 
-        initialize: function() {
-            this.on('pre_render', this.preRender, this);
-        },
-
-        get: function(x) { return this.model.get(x); },
-
-        preRender: function() {
-            this.className = null;
-            if (this.model.get('isDone'))
-                this.className = 'is-done';
-        },
-
-        isDone: function() { 
-            return this.model.get('isDone');
-        },
-
-        checked: function(evt) {
-            var v = this.$('input').attr('checked');
-            this.model.set({'isDone' : v === 'checked'});
+        className: function() {
+            return this.model.get('isDone') ? 'is-done' : null;
         }
     });
 
@@ -104,12 +87,11 @@
         },
 
         all_done: function(evt) {
-            var v = $(evt.target).attr('checked');
+            var v = $(evt.target).attr('checked') === 'checked';
 
             Todos.todoList.each(function (item) {
-                item.set('isDone', v == 'checked', { silent: true });
+                item.set('isDone', v);
             });
-            Todos.todoList.trigger('change');
         }
     });
 
