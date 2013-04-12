@@ -411,11 +411,12 @@
 
                     elem.append(tmpl(this, { data: data }));
                 }
-            } else if (this._childTemplate) {
-                tmpl = this._childTemplate[0];
+            } else if (this._childTemplate || this.itemView) {
+                tmpl = this._childTemplate ? this._childTemplate[0] : null;
 
                 var oldset = _.map(this._childViews, function (view) { return view.model.cid; });
                 var newset = this.collection.map(function (obj) { return obj.cid; });
+                var self = this;
 
                 this._childViews = _.filter(this._childViews, function(view) {
                     if (! _.contains(newset, view.model.cid)) {
@@ -438,7 +439,12 @@
                         var v = _.find(this._childViews, function (view) { return view.model.cid == obj.cid; });
                         e = v._render(buffer, d2);
                     } else {
-                        e = tmpl(obj, { data: d2 });
+                        if (self.itemView) {
+                            var v = new this.itemView({model: obj});
+                            e = v._render(buffer, d2);
+                        } else {
+                            e = tmpl(obj, { data: d2 });
+                        }
                     }
                     elem.append(e);
                 }, this);
